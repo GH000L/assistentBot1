@@ -6,7 +6,7 @@ on:
       action:
         description: 'Что сделать?'
         required: true
-        default: 'tasks'
+        default: 'schedule'
         type: choice
         options:
           - schedule
@@ -17,6 +17,9 @@ jobs:
   send-message:
     runs-on: ubuntu-latest
     steps:
+      - name: Загрузка репозитория
+        uses: actions/checkout@v4
+
       - name: Получить дату
         id: date
         run: |
@@ -27,6 +30,7 @@ jobs:
           echo "day=$DAY_RU" >> $GITHUB_OUTPUT
           echo "date=$(date +'%d.%m.%Y')" >> $GITHUB_OUTPUT
           echo "time=$(date +'%H:%M')" >> $GITHUB_OUTPUT
+          echo "week=$(date +%U)" >> $GITHUB_OUTPUT
 
       - name: Отправить в Telegram
         uses: appleboy/telegram-action@master
@@ -34,27 +38,31 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            📚 *Учебный ассистент*
+            🎓 *Учебный ассистент*
             
             📅 День: ${{ steps.date.outputs.day }}
             📆 Дата: ${{ steps.date.outputs.date }}
             ⏰ Время: ${{ steps.date.outputs.time }}
             
-            ${{ github.event.inputs.action == 'schedule' && '🎓 *Расписание на сегодня:*' || '' }}
-            ${{ github.event.inputs.action == 'schedule' && '\n• 9:00 - Программирование' || '' }}
-            ${{ github.event.inputs.action == 'schedule' && '\n• 11:00 - Математика' || '' }}
-            ${{ github.event.inputs.action == 'schedule' && '\n• 14:00 - Английский' || '' }}
+            ${{ github.event.inputs.action == 'schedule' && format('📚 *РАСПИСАНИЕ НА {0}:*', steps.date.outputs.day) || '' }}
+            ${{ github.event.inputs.action == 'schedule' && format('\n\n{0}', fromJSON('{"понедельник":"🕘 9:00 - Программирование\n🕚 11:00 - Математика\n🕑 14:00 - Английский","вторник":"🕘 9:00 - Физика\n🕐 13:00 - Web-разработка\n🕒 15:00 - Базы данных","среда":"🕙 10:00 - Алгоритмы\n🕛 12:00 - Сети\n🕓 16:00 - Проектная работа","четверг":"🕘 9:00 - Искусственный интеллект\n🕐 13:00 - Кибербезопасность","пятница":"🕙 10:00 - Мобильная разработка\n🕑 14:00 - DevOps\n🕔 17:00 - Code Review","суббота":"🕘 9:00 - Самостоятельная работа","воскресенье":"📖 Выходной - отдых и подготовка"}')[steps.date.outputs.day]) || '' }}
             
-            ${{ github.event.inputs.action == 'tasks' && '✅ *Задачи на сегодня:*' || '' }}
-            ${{ github.event.inputs.action == 'tasks' && '\n• Проверить почту' || '' }}
-            ${{ github.event.inputs.action == 'tasks' && '\n• Сделать ДЗ по программированию' || '' }}
-            ${{ github.event.inputs.action == 'tasks' && '\n• Подготовиться к завтрашнему дню' || '' }}
+            ${{ github.event.inputs.action == 'tasks' && '✅ *ЗАДАЧИ НА СЕГОДНЯ:*' || '' }}
+            ${{ github.event.inputs.action == 'tasks' && '\n• Проверить почту и уведомления' || '' }}
+            ${{ github.event.inputs.action == 'tasks' && '\n• Сделать домашнее задание' || '' }}
+            ${{ github.event.inputs.action == 'tasks' && '\n• Подготовиться к завтрашним занятиям' || '' }}
+            ${{ github.event.inputs.action == 'tasks' && '\n• Поработать над проектом' || '' }}
+            ${{ github.event.inputs.action == 'tasks' && '\n• Отдохнуть и восстановить силы' || '' }}
             
-            ${{ github.event.inputs.action == 'progress' && '📊 *Прогресс за неделю:*' || '' }}
-            ${{ github.event.inputs.action == 'progress' && '\n⏰ Часов учебы: 25' || '' }}
-            ${{ github.event.inputs.action == 'progress' && '\n✅ Выполнено задач: 18' || '' }}
-            ${{ github.event.inputs.action == 'progress' && '\n📈 Прогресс: 85%' || '' }}
+            ${{ github.event.inputs.action == 'progress' && '📊 *ПРОГРЕСС ЗА НЕДЕЛЮ:*' || '' }}
+            ${{ github.event.inputs.action == 'progress' && format('\n\n📈 Неделя №{0}', steps.date.outputs.week) || '' }}
+            ${{ github.event.inputs.action == 'progress' && '\n⏰ Часов учебы: 28' || '' }}
+            ${{ github.event.inputs.action == 'progress' && '\n✅ Выполнено задач: 22' || '' }}
+            ${{ github.event.inputs.action == 'progress' && '\n💻 Написано строк кода: 1500' || '' }}
+            ${{ github.event.inputs.action == 'progress' && '\n📊 Общий прогресс: 92%' || '' }}
+            ${{ github.event.inputs.action == 'progress' && '\n\n🏆 Отличная работа! Так держать!' || '' }}
             
             ---
-            🚀 Удачи в учебе!
+            🤖 *Программист Ассистент v1.0*
+            🚀 Удачи в обучении!
           parse_mode: markdown
